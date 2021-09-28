@@ -2,6 +2,7 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
+const { Feed } = require("../models");
 
 try {
   fs.accessSync("uploads");
@@ -30,6 +31,32 @@ const router = express.Router();
 
 router.post("/image", upload.single("image"), async (req, res, next) => {
   return res.status(201).json({ path: req.file.path });
+});
+
+router.post("/create", async (req, res, next) => {
+  const { content, imagePath } = req.body;
+
+  let title = "";
+
+  if (content.length > 10) {
+    title = String(content).substring(0, 9);
+  } else {
+    title = content;
+  }
+
+  try {
+    await Feed.create({
+      title,
+      content,
+      imagePath,
+      UserId: req.user.id,
+    });
+
+    return res.status(201).json({ result: true });
+  } catch (error) {
+    console.error(error);
+    return res.status(401).send("피드를 생성할 수 없습니다.");
+  }
 });
 
 module.exports = router;
